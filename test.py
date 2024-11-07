@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import math
 
-video = cv2.VideoCapture('/dev/video1')
+video = cv2.VideoCapture(0) #'/dev/video0/'
 video.set(cv2.CAP_PROP_FRAME_WIDTH, 720)
 video.set(cv2.CAP_PROP_FRAME_HEIGHT, 540)
 
@@ -112,3 +112,4 @@ while True:
 
 video.release()
 cv2.destroyAllWindows()
+
