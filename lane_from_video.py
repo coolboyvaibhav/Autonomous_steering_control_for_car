@@ -57,7 +57,8 @@ def warpImg(img, points, w, h):
     return imgWarp
 
 if __name__ == '__main__':
-    cap = cv2.VideoCapture('./test_videos/solidWhiteRight.mp4')
+    # cap = cv2.VideoCapture('./test_videos/solidWhiteRight.mp4')
+    cap = cv2.VideoCapture('./Video/track_vdo_2.mp4')
     initialTracbarVals = [100, 100, 100, 240]
     initializeTrackbars(initialTracbarVals)
     
