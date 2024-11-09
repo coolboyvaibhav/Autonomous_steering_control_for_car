@@ -1,25 +1,32 @@
 import cv2
 import numpy as np
 
-# Step 1: Color threshold to detect black or grey regions on the road
+# Step 1: Color threshold to detect black, shiny and grey regions on the road
 def threshold_image(img):
     imgHsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     
-    # Define HSV ranges for black and grey color detection
-    # Black color: low brightness (V) and low saturation (S)
-    lower_black = np.array([0, 0, 0], dtype=np.uint8)  # Low S and low V for black
-    upper_black = np.array([179, 255, 50], dtype=np.uint8)  # Low V for black
+    # Define HSV ranges for black, shiny (highlighted black), and grey color detection
+    # Black color: low saturation (S) and very low brightness (V)
+    lower_black = np.array([0, 0, 0], dtype=np.uint8)  # Low saturation and low brightness for black
+    upper_black = np.array([179, 255, 50], dtype=np.uint8)  # Low brightness for black
     
-    # Grey color: low to medium saturation (S), medium brightness (V)
+    # Shiny (highlighted) black: low saturation (S) and higher brightness (V) to capture reflections
+    lower_shiny_black = np.array([0, 0, 50], dtype=np.uint8)  # Slightly higher brightness for shiny black
+    upper_shiny_black = np.array([179, 255, 150], dtype=np.uint8)  # Allow for high brightness for shiny regions
+    
+    # Grey color: low to medium saturation (S), medium to high brightness (V) for grey shades
     lower_grey = np.array([0, 0, 50], dtype=np.uint8)  # Grey (low saturation, medium brightness)
-    upper_grey = np.array([179, 50, 200], dtype=np.uint8)  # Allow grey shades
+    upper_grey = np.array([179, 50, 200], dtype=np.uint8)  # Allow grey shades with higher brightness
     
-    # Combine both black and grey masks
+    # Combine the black, shiny black, and grey masks
     mask_black = cv2.inRange(imgHsv, lower_black, upper_black)
+    mask_shiny_black = cv2.inRange(imgHsv, lower_shiny_black, upper_shiny_black)
     mask_grey = cv2.inRange(imgHsv, lower_grey, upper_grey)
     
-    # Combine both masks for black and grey detection
-    mask = cv2.bitwise_or(mask_black, mask_grey)
+    # Combine all the masks for black, shiny, and grey color detection
+    mask = cv2.bitwise_or(mask_black, mask_shiny_black)
+    mask = cv2.bitwise_or(mask, mask_grey)
+    
     return mask
 
 # Step 2: Define a region of interest (ROI) to focus on lanes
@@ -65,8 +72,11 @@ def warp_image(img, points, w, h):
     imgWarp = cv2.warpPerspective(img, matrix, (w, h))
     return imgWarp
 
-def getHistogram(img, minPer=0.2, display=False):
-    histValues = np.sum(img, axis=0)
+def getHistogram(img, minPer=0.2, display=False, region=1):
+
+    if region == 1:
+        histValues = np.sum(img, axis=0)
+        
     maxValue = np.max(histValues)
     minValue = minPer * maxValue
 
@@ -76,7 +86,7 @@ def getHistogram(img, minPer=0.2, display=False):
     if display:
         imgHist = np.zeros((img.shape[0], img.shape[1], 3), np.uint8)
         for x, intensity in enumerate(histValues):
-            cv2.line(imgHist, (x, img.shape[0]), (x, img.shape[0] - intensity // 255), (37, 150, 190), 1)
+            cv2.line(imgHist, (x, img.shape[0]), (x, img.shape[0] - intensity // 255), (255, 0, 255), 1)
         return basePoint, imgHist
     return basePoint
 
@@ -104,7 +114,7 @@ def get_lane_curve(img):
 
 if __name__ == '__main__':
     cap = cv2.VideoCapture('./video/track_vdo_1.mp4')  # Ensure path is correct
-    initialTracbarVals = [162, 103, 33, 226]
+    initialTracbarVals = [100, 80, 20, 200]
     initialize_trackbars(initialTracbarVals)
     
     while cap.isOpened():
