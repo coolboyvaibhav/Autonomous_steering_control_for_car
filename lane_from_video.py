@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-
 # Step 1: Color threshold to detect black or grey regions on the road
 def threshold_image(img):
     imgHsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
@@ -21,20 +20,17 @@ def threshold_image(img):
     # Combine both masks for black and grey detection
     mask = cv2.bitwise_or(mask_black, mask_grey)
     return mask
-
 # Step 2: Define a region of interest (ROI) to focus on lanes
 def region_of_interest(img, points):
     mask = np.zeros_like(img)
     cv2.fillPoly(mask, [np.array(points, dtype=np.int32)], 255)
     masked_image = cv2.bitwise_and(img, mask)
     return masked_image
-
 # Step 3: Draw points for visualization
 def draw_points(img, points):
     for x in range(4):
         cv2.circle(img, (int(points[x][0]), int(points[x][1])), 10, (0, 255, 0), cv2.FILLED)
     return img
-
 def initialize_trackbars(initialTracbarVals, wT=480, hT=240):
     cv2.namedWindow("Trackbars")
     cv2.resizeWindow("Trackbars", 360, 240)
@@ -42,7 +38,6 @@ def initialize_trackbars(initialTracbarVals, wT=480, hT=240):
     cv2.createTrackbar("Height Top", "Trackbars", initialTracbarVals[1], hT, lambda x: None)
     cv2.createTrackbar("Width Bottom", "Trackbars", initialTracbarVals[2], wT//2, lambda x: None)
     cv2.createTrackbar("Height Bottom", "Trackbars", initialTracbarVals[3], hT, lambda x: None)
-
 # Step 4: Read values from trackbars
 def val_trackbars(wT=480, hT=240):
     widthTop = cv2.getTrackbarPos("Width Top", "Trackbars")
@@ -56,7 +51,6 @@ def val_trackbars(wT=480, hT=240):
         (wT - widthBottom, heightBottom)
     ])
     return points
-
 # Step 5: Warp image to get a bird’s-eye view
 def warp_image(img, points, w, h):
     pts1 = np.float32(points)
@@ -64,12 +58,10 @@ def warp_image(img, points, w, h):
     matrix = cv2.getPerspectiveTransform(pts1, pts2)
     imgWarp = cv2.warpPerspective(img, matrix, (w, h))
     return imgWarp
-
 def getHistogram(img, minPer=0.2, display=False):
     histValues = np.sum(img, axis=0)
     maxValue = np.max(histValues)
     minValue = minPer * maxValue
-
     indexArray = np.where(histValues <= minValue)
     basePoint = int(np.average(indexArray))
     
@@ -79,7 +71,6 @@ def getHistogram(img, minPer=0.2, display=False):
             cv2.line(imgHist, (x, img.shape[0]), (x, img.shape[0] - intensity // 255), (37, 150, 190), 1)
         return basePoint, imgHist
     return basePoint
-
 # Main function to preprocess and detect lanes
 def get_lane_curve(img):
     imgThres = threshold_image(img)
@@ -101,7 +92,6 @@ def get_lane_curve(img):
     basePoints, imgHist = getHistogram(imgWarp, display=True)
     cv2.imshow('Histogram', imgHist)
     return imgWarp
-
 if __name__ == '__main__':
     cap = cv2.VideoCapture('./video/track_vdo_1.mp4')  # Ensure path is correct
     initialTracbarVals = [162, 103, 33, 226]
