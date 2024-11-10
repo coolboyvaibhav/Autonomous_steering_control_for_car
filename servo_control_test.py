@@ -65,3 +65,9 @@ except KeyboardInterrupt:
     GPIO.cleanup()
 
 
+
+print("hello")
+
+
+
+
