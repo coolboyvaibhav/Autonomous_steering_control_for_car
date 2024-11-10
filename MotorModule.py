@@ -5,7 +5,7 @@
 import RPi.GPIO as GPIO
 from time import sleep
 from MotorModule import Motor  # Ensure this module exists
-from LaneModule import getLaneCurve  # Ensure this module exists
+from lane_detection import getLaneCurve  # Ensure this module exists
 import WebcamModule  # Ensure this module exists
 import cv2
 
