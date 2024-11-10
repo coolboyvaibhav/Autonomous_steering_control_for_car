@@ -61,6 +61,10 @@ def getLaneCurve(img, display=2):
         
         elif display == 1:
             cv2.imshow('Result', imgResult)
+    #Normalizations
+    curve=curve/100
+    if curve>1: curve=1
+    if curve <-1: curve=-1
 
     return curve
 
@@ -84,7 +88,7 @@ if __name__ == '__main__':
             continue
 
         img = cv2.resize(img, (480, 240))
-        curve=getLaneCurve(img,display=0)
+        curve=getLaneCurve(img,display=1)
         print(curve)
         #cv2.imshow('Vid', img)
 
