@@ -1,6 +1,13 @@
 import cv2
 import numpy as np
 
+
+
+def region_of_interest(img, points):
+    mask = np.zeros_like(img)
+    cv2.fillPoly(mask, [np.array(points, dtype=np.int32)], 255)
+    masked_image = cv2.bitwise_and(img, mask)
+    return masked_image
 def thresholding(img):
     imgHsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     lowerWhite = np.array([80, 0, 0]) 

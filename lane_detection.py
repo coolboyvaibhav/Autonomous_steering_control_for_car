@@ -11,15 +11,19 @@ def getLaneCurve(img, display=2):
     
     # Step 1
     imgThres = utils.thresholding(img)
+    cv2.imshow('Threshoulded image ',imgThres)
 
     # Step 2
     hT, wT, c = img.shape
     points = utils.val_trackbars()
-    imgWarp = utils.warpImg(imgThres, points, wT, hT)
+    imgROI=utils.region_of_interest(imgThres,points)
+    cv2.imshow('region of Interest',imgROI)
+    imgWarp = utils.warpImg(imgROI, points, wT, hT)
     imgWarpPoints = utils.draw_points(imgCopy, points)
         
     # Step 3
     middlePoint, imgHist = utils.getHistogram(imgWarp, display=True, minPer=0.5, region=4)
+    cv2.imshow('Histogram',imgHist)
     curveAveragePoint, imgHist = utils.getHistogram(imgWarp, display=True, minPer=0.9)
     curveRaw = curveAveragePoint - middlePoint
 
@@ -64,12 +68,13 @@ def getLaneCurve(img, display=2):
     #Normalizations
     curve=curve/100
     if curve>1: curve=1
-    if curve <-1: curve=-1
+    if curve < -1: curve=-1
 
     return curve
 
 if __name__ == '__main__':
-    cap = cv2.VideoCapture('./Video/track_vdo_1.mp4')
+    #cap = cv2.VideoCapture('./Video/track_vdo_1.mp4')
+    cap = cv2.VideoCapture('.test_videos/solidYellowLeft.mp4')
     
     initialTrackBarVals = [184, 135, 48, 216]
     utils.initialize_trackbars(initialTrackBarVals)
@@ -78,7 +83,8 @@ if __name__ == '__main__':
         frameCounter=1
         # Check if the video is opened successfully
         if not cap.isOpened():
-            cap = cv2.VideoCapture('./Video/track_vdo_1.mp4')
+            #cap = cv2.VideoCapture('./Video/track_vdo_1.mp4')
+            cap = cv2.VideoCapture('./test_videos/solidYellowLeft.mp4')
 
         success, img = cap.read()
         
