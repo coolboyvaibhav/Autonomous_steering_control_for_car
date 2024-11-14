@@ -29,8 +29,8 @@ void WTIMER3B_Handler(void);
 void init_pwm(void);
 void delay_ms(int n);
 void PWM_init_new(void);
-
-
+void mapPWM(int input) ;
+void pid(void);
 // hex values of digits for 7 segment display
 int disp_digits[] = {0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x6F};
 // variable for keeping track of time in RUN state / stopwatch time
@@ -62,7 +62,7 @@ volatile long long int delay_val = 3;
 
 volatile uint32_t ui32Load = 0;;
 volatile uint32_t ui32PWMClock;
-volatile uint8_t ui8Adjust;
+volatile uint32_t ui8Adjust;
 // array to store command characters, top specifying total characters received. (stack implementation - only push allowed)
 char command_buffer[6];
 int top = 0;
@@ -109,10 +109,13 @@ unsigned long increment ;
 unsigned long pwmNow ;
 int stop;
 int running;
-
-int data0, data1;
+int kp,kd,ki;
+int data0, data1, data2, data3, data4, data5;
 int main(void)
 {
+    kp=0;
+    kd=0;
+    ki=0;
     state = 0;
     update_flag = 0;
     timer_200_msec = 0;
@@ -123,7 +126,7 @@ int main(void)
     pwmNow = 1;
     stop =1;
     running =200;
-    ui8Adjust = 55;
+    ui8Adjust = 18500;
     EnableInterrupts();
     HC_SR04_setup();
     systick_setup();
@@ -135,12 +138,17 @@ int main(void)
 //
        delay_ms(1);
 
+
     while(1)
     {
+        PWM1_0_CMPA_R=ui8Adjust;
+//        mapPWM((int)(ui8Adjust));
         led_action();
+        pid();
         //UART0_command_check();
         if (update_flag == 1)// 200msec parameter update
             {
+
                 distance = calculate_distance();
                 update_flag = 0;                    // reset parameter update bit
                 send_trigger_pulse();
@@ -186,14 +194,75 @@ int main(void)
 
                         data0 = GPIO_PORTB_DATA_R & 0x01;   // stores Input of PB0
                         data1 = GPIO_PORTB_DATA_R & 0x02;   // stores Input of PB1
-
-
-
        }
 
     return 0;
 }
 
+
+void pid(){
+    int time=1;
+//    int time=(int)(current_timer_register)
+    //timer reset
+
+    uint16_t sensor;
+    static int error,i_error;
+    int prevError;
+    sensor=(GPIO_PORTB_DATA_R & 0x3E)>>1;
+    prevError=error;
+    switch(sensor){
+    case 0x01:{
+        error=-1000;
+        break;
+    }
+    case 0x03:{
+            error=-750;
+            break;
+        }
+    case 0x02:{
+                error=-500;
+                break;
+            }
+    case 0x06:{
+                error=-250;
+                break;
+            }
+    case 0x04:{
+                error=0;
+                break;
+            }
+    case 0x0C:{
+                error=250;
+                break;
+            }
+    case 0x08:{
+                error=500;
+                break;
+            }
+    case 0x18:{
+                error=750;
+                break;
+            }
+    case 0x10:{
+                error=1000;
+                break;
+            }
+    default:{
+        error=0;
+    }
+
+    }
+    i_error+=error;
+    if(i_error>=100){
+        i_error=100;
+    }
+    else if(i_error<=-100)
+        i_error=-100;
+    int output=(error*kp)+(int)(((float)error-(float)prevError)*(float)kd/(float)time)+(i_error*ki*time);
+
+
+
+}
 // Calculate Distance from Echo Pulse Width
 unsigned int calculate_distance(void) {
     unsigned int time_diff;
@@ -446,7 +515,7 @@ void PWM_init_new()
           PWM1_0_GENA_R = 0x0000008C;     /* M1PWM2 output set when reload. Drive pwmA high when loaded and invert when matches compare A reg. This gives left aligned square wave */
 
           PWM1_0_LOAD_R = 20000-1; /* set load value for 3.2kHz (16MHz/16000) */
-          PWM1_0_CMPA_R = 2000; /* set duty cycle to min */
+          PWM1_0_CMPA_R = 1500; /* set duty cycle to min */
 //          PWM1_0_CMPA_R = 4605; /* set duty cycle to min */
 
           PWM1_0_CTL_R = 1; /* start timer */
@@ -454,7 +523,23 @@ void PWM_init_new()
 
 }
 
+void mapPWM(int input) {
+    int input_min = 0;
+    int input_max = 1000;
+    int output_min = 19000;
+    int output_max = 18000;
 
+    // Calculate the mapped value
+     uint32_t mappedValue = (uint32_t)(18000+input);
+
+    // Cap the output value within the range [18000, 19000]
+    if (mappedValue < 18000) {
+        mappedValue = 18000;
+    } else if (mappedValue > 19000) {
+        mappedValue = 19000;
+    }
+    PWM1_0_CMPA_R=mappedValue;
+}
 void UART0_Transmit(char data)
 {
     while((UART0_FR_R & (1<<5)) != 0)

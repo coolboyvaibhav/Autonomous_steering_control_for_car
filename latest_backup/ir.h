@@ -26,20 +26,28 @@
 #include <driverlib/qei.h>
 #include "driverlib/debug.h"
 
+
+//********* Defining all Macros ***********//
+#define PORTB_CLK_EN        0x02          // clock enable for port B
+#define PORTA_CLK_EN        0x01          // clock enable for port A
+#define LEDs                      0x0E          // enables all LEDS
+
 //*********************Sensors*****************************//
 
 #define INT_PB0                 0x01          // reads 1st sensor
 #define INT_PB1                 0x02          // reads 2nd sensor
+#define INT_PB2                 0x04          // reads 3rd sensor
+#define INT_PB3                 0x08          // reads 4th sensor
+#define INT_PB4                 0x10          // reads 5th sensor
+#define INT_PB5                 0x20          // reads 6th sensor
 
-//********* PORT B Initializations. Base Address is 0x40005000 **********//
-//#define GPIO_PORTB_DATA_R       (*((volatile unsigned long*) 0x400053FC))
-//#define GPIO_PORTB_DIR_R        (*((volatile unsigned long*) 0x40005400))
-//#define GPIO_PORTB_DEN_R        (*((volatile unsigned long*) 0x4000551C))
-//#define GPIO_PORTB_PDR_R        (*((volatile unsigned long*) 0x40005514))
+#define PA2                         0x04          // pin 1 of L298
+#define PA3             0x08          // pin 2 of L298
+#define PA4                         0x10          // pin 3 of L298
+#define PA5                         0x20          // pin 4 of L298
 
-//********* Defining all Macros ***********//
-#define PORTB_CLK_EN        0x02          // clock enable for port B
-
+#define PORTA_DIR         0xFF          // PA2- PA5 ports will have same direction
+#define PORTA_DEN             0xFF          // PA2- PA5 will all be digitally enabled
 void init_ir_sensor(void);
 
 
@@ -48,9 +56,9 @@ void init_ir_sensor(void){
     SYSCTL_RCGCGPIO_R |=  PORTB_CLK_EN;
     volatile unsigned delay_clk;
     delay_clk           = SYSCTL_RCGCGPIO_R;
-    GPIO_PORTB_DEN_R    |= INT_PB0 + INT_PB1;         // Digitally enabling the ports PB1 and PB2
-    GPIO_PORTB_DIR_R    &= ~( INT_PB0 + INT_PB1) ;    // setting the direction of PF1 and PF2 as INPUT
-    GPIO_PORTB_PDR_R    |= ( INT_PB0 + INT_PB1) ;     // Pull down Register
+    GPIO_PORTB_DEN_R     |= INT_PB0 + INT_PB1+ INT_PB2+ INT_PB3+ INT_PB4+ INT_PB5;         // Digitally enabling the ports PF1 and PF2
+        GPIO_PORTB_DIR_R    &= ~( INT_PB0 + INT_PB1+ INT_PB2+ INT_PB3+ INT_PB4+ INT_PB5) ;    // setting the direction of PF1 and PF2 as INPUT
+        GPIO_PORTB_PDR_R    |= ( INT_PB0 + INT_PB1+ INT_PB2+ INT_PB3+ INT_PB4+ INT_PB5) ;     // Pull down Register
 //    GPIO_PORTA_DEN_R  |= PORTA_DEN;                 // Digitally enabling the ports PB0 to PB3
 //    GPIO_PORTA_DIR_R    |=  PORTA_DIR;                // setting the direction of PA2 to PA5 as OUTPUT
 }
